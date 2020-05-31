@@ -24,6 +24,50 @@ This is why we need to take radius into consideration at first. However, after c
 
 * #### Modeling
   Our goal is to cluster the neighborhood so a clustering model like **KMeans** would of good use.
+  
+    *Calculate the euclidean distance of two vector*
+    ```
+    def eucli_dist(v1,v2):
+      return np.sqrt(np.sum(np.power(v1-v2,2)))
+    ```
+    
+    *Generate k random centroids within the dataset*
+    ```
+    def rand_centroids(df,num_centroids):
+      n = np.shape(df)[1]
+      centroids = np.mat(np.zeros((num_centroids,n)))
+      for i in range(n):
+          minJ = min(df[:,i])
+          rangeJ = float(max(df[:,i]) - minJ)
+          centroids[:,i] = minJ + rangeJ * np.random.rand(num_centroids,1)
+      return centroids
+    ```
+    
+    *KMeans clustering implementation*
+    ```
+    def KMeans(df, num_centroids, distMsr=eucli_dist):
+      m = np.shape(df)[0]
+      clusterAssment = np.mat(np.zeros((m,2)))
+      centroids = rand_centroids(df,num_centroids)
+      changed = True
+      while changed:
+          changed = False
+          for i in range(m):
+              minDist = np.inf
+              minIndex = -1
+              for j in range(num_centroids):
+                  distJI = distMsr(centroids[j,:],df[i,:])
+                  if distJI < minDist:
+                      minDist = distJI; minIndex = j
+              if clusterAssment[i,0] != minIndex: changed = True
+              clusterAssment[i,:] = minIndex, minDist**2
+          print(centroids)
+          for cent in range(num_centroids):
+              ptsInClust = df[np.nonzero(clusterAssment[:,0].A==cent)[0]]
+              centroids[cent,:] = np.mean(ptsInClust,axis=0)
+      return centroids, clusterAssment
+    ```
+    
   *Note that KMeans cluser the neighborhood based on their average value of each category rather than their geo location.
   So it might be a little confusing that the neighborhoods that far away belongs to the same cluster.*
 
